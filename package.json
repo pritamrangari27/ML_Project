@@ -1,0 +1,12 @@
+{
+  "name": "ml-project",
+  "version": "1.0.0",
+  "description": "ML Project - Mood Based Music Recommendor",
+  "private": true,
+  "scripts": {
+    "start": "cd backend && python -m streamlit run app.py --server.port 8502"
+  },
+  "keywords": ["streamlit", "emotion-detection", "music-recommendation", "ai", "ml"],
+  "author": "Pritam Rangari",
+  "license": "MIT"
+}
