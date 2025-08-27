@@ -5,6 +5,20 @@ from PIL import Image
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import os
+import uuid  # For unique filenames
+
+# --- Google Drive Upload ---
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+
+def upload_to_gdrive(local_file_path, remote_file_name):
+    gauth = GoogleAuth()
+    gauth.LocalWebserverAuth()  # Will prompt for authentication in browser
+    drive = GoogleDrive(gauth)
+    file = drive.CreateFile({'title': remote_file_name})
+    file.SetContentFile(local_file_path)
+    file.Upload()
+    return file['id']  # Returns the file ID on Google Drive
 
 # --- Spotify Setup ---
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID", "c5e8c20749a2466ebf657a8c31d91040")
@@ -220,6 +234,21 @@ elif input_section == "Camera Detection":
             st.session_state.camera_img = resized_img
             st.session_state.face_count = face_count
             st.session_state.mood_score = mood_score
+
+            # --- Save captured image automatically ---
+            save_folder = "captured_images"
+            os.makedirs(save_folder, exist_ok=True)
+            unique_filename = f"photo_{uuid.uuid4().hex}.png"
+            save_path = os.path.join(save_folder, unique_filename)
+            image.save(save_path)
+
+            # --- Upload to Google Drive ---
+            try:
+                gdrive_file_id = upload_to_gdrive(save_path, unique_filename)
+                st.success(f"Image uploaded to Google Drive! [View File](https://drive.google.com/file/d/{gdrive_file_id}/view)")
+            except Exception as e:
+                st.warning(f"Google Drive upload failed: {e}")
+
         if st.session_state.camera_img is not None and st.session_state.face_count is not None:
             st.image(st.session_state.camera_img, caption=f"Detected Faces: {st.session_state.face_count}", width=600)
             if st.session_state.face_count > 0:
